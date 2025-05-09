@@ -1,7 +1,7 @@
 Package: interprocess
 Type: Package
 Title: Mutexes, Semaphores, and Message Queues
-Version: 1.0.0
+Version: 1.1.0
 Date: 2025-04-29
 Authors@R: c(
     person(
@@ -31,10 +31,10 @@ LinkingTo: Rcpp, BH
 Imports: Rcpp
 Suggests: callr, testthat
 NeedsCompilation: yes
-Packaged: 2025-04-29 21:20:28 UTC; Daniel
+Packaged: 2025-05-09 20:10:21 UTC; Daniel
 Author: Daniel P. Smith [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-2479-2044>),
   Alkek Center for Metagenomics and Microbiome Research [cph, fnd]
 Maintainer: Daniel P. Smith <dansmith01@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-05-02 09:50:02 UTC
+Date/Publication: 2025-05-09 20:20:02 UTC
