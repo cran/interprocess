@@ -22,30 +22,18 @@ mutexes, semaphores, and message queues should start with a letter followed
 by up to 249 alphanumeric characters. These functions generate names meeting
 these requirements.\cr\cr
 \itemize{
-\item \code{uid()}: 12-character encoding of PID and time since epoch.
-\item \code{hash()}: 12-character hash of any string (hash space = 2^64).
+\item \code{uid()}: 11-character encoding of PID and time since epoch.
+\item \code{hash()}: 11-character hash of any string (hash space = 2^64).
 }
 }
 \details{
-\code{uid()}s will not collide with a \code{hash()}.
-\itemize{
-\item \code{uid()}s never start with \code{'Z'}.
-\item \code{hash()}s always start with \code{'Z'}.
-}
+\code{uid()}s encode sequential 1/100 second intervals, beginning at the current
+process's start time. If the number of requested UIDs exceeds the number of
+1/100 seconds that the process has been alive, then the process will
+momentarily sleep before returning.
 
-\code{uid()}s will not collide with a \code{ps::ps_string()}.
-\itemize{
-\item \code{uid()}s are always 12 characters long.
-\item \code{ps::ps_string()}s are always 11 characters long.
-}
-
-\code{uid()}s will not collide with each other.
-\itemize{
-\item The first 4 characters encode the current PID.
-\item The last 8 characters encode sequential 1/10000 second intervals that the
-current process was alive. Attempting to generate more than 10,000 UIDs per
-second will cause the process to momentarily sleep.
-}
+A \code{uid()} begins with an uppercase letter (\code{A - R}); a \code{hash()} begins with
+a lowercase letter (\code{a - v}).
 }
 \examples{
 

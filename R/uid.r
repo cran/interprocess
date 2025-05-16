@@ -5,22 +5,16 @@
 #' mutexes, semaphores, and message queues should start with a letter followed 
 #' by up to 249 alphanumeric characters. These functions generate names meeting 
 #' these requirements.\cr\cr
-#' * `uid()`: 12-character encoding of PID and time since epoch.
-#' * `hash()`: 12-character hash of any string (hash space = 2^64).
+#' * `uid()`: 11-character encoding of PID and time since epoch.
+#' * `hash()`: 11-character hash of any string (hash space = 2^64).
 #' 
-#' `uid()`s will not collide with a `hash()`.
-#' * `uid()`s never start with `'Z'`.
-#' * `hash()`s always start with `'Z'`.
+#' `uid()`s encode sequential 1/100 second intervals, beginning at the current
+#' process's start time. If the number of requested UIDs exceeds the number of 
+#' 1/100 seconds that the process has been alive, then the process will 
+#' momentarily sleep before returning.
 #' 
-#' `uid()`s will not collide with a `ps::ps_string()`.
-#' * `uid()`s are always 12 characters long.
-#' * `ps::ps_string()`s are always 11 characters long.
-#' 
-#' `uid()`s will not collide with each other.
-#' * The first 4 characters encode the current PID.
-#' * The last 8 characters encode sequential 1/10000 second intervals that the 
-#' current process was alive. Attempting to generate more than 10,000 UIDs per 
-#' second will cause the process to momentarily sleep.
+#' A `uid()` begins with an uppercase letter (`A - R`); a `hash()` begins with 
+#' a lowercase letter (`a - v`).
 #' 
 #' @rdname uid
 #' 
@@ -42,20 +36,20 @@
 uid <- function () {
   
   # Constraints:
-  # - maximum of 10,000 UIDs/second
-  # - time overflows on Nov 22nd, 2661
-  # - PID <= 6,765,201 (std max = 4,194,304)
+  # - maximum of 100 UIDs/second
+  # - time overflows on Dec 14th, 3085
+  # - PID < 4,194,304 (current std max)
   
-  ENV$uid_time <- ENV$uid_time + 1
+  start_time    <- ENV$start_time
+  curr_time     <- as.numeric(Sys.time())
+  ENV$uids_made <- ENV$uids_made + 1
   
-  max_time <- floor(as.numeric(Sys.time() + 0.01) * 10000)
-  if (max_time < ENV$uid_time) Sys.sleep(0.001) # nocov
+  if (ENV$uids_made / 100 > curr_time - start_time)
+    Sys.sleep(0.02) # nocov
   
-  map <- c(letters, LETTERS, 0:9)
-  
-  paste(collapse = '', map[1 + c(
-    floor(ENV$pid      / 51 ^ (3:0)) %% 51,
-    floor(ENV$uid_time / 62 ^ (7:0)) %% 62 )])
+  paste(collapse = '', c(
+    ENV$pid_base62,
+    rcpp_base62(start_time, ENV$uids_made, 7) ))
 }
 
 
@@ -64,15 +58,8 @@ uid <- function () {
 #' @export
 
 hash <- function (str) {
-  
   str <- as.character(str)
   stopifnot(isTRUE(!is.na(str)))
-  
-  value <- rcpp_hash(str)
-  map   <- c(letters, LETTERS, 0:9)
-  
-  paste(
-    collapse = '', 
-    c('Z', map[1 + floor(value / 62 ^ (10:0)) %% 62 ]) )
+  rcpp_hash(str)
 }
 

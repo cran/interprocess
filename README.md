@@ -17,7 +17,7 @@ process to another. All these interprocess communication (IPC) tools can
 optionally block with or without a timeout.
 
 Works cross-platform, including Windows, MacOS, and Linux, and can be used to 
-synchronize a mixture of R sessions and other types of processes if needed.
+synchronize a mixture of R sessions and other types of processes.
 
 Implemented using the [Boost C++ library](https://www.boost.org/doc/libs/release/libs/interprocess/).
 
@@ -43,7 +43,7 @@ the resource name (a short text string) amongst cooperating processes enables
 communication and synchronization.
 
 These names can be any alphanumeric string that starts with a letter and is no
-longer than 250 characters. The `mutex()`, `semaphore()`, and `queue()` 
+longer than 250 characters. The `mutex()`, `semaphore()`, and `msg_queue()` 
 functions will default to generating a unique identifier, or you can provide a 
 custom or pre-existing one with the `name` parameter. If the resource is 
 associated with a specific file or directory, the `file` parameter can be used 
@@ -57,15 +57,15 @@ or the operating system is restarted.
 
 ### Mutexes
 
-An exclusive lock is acquired by default. For a shared lock, use 
-`shared = TRUE`.
+An exclusive advisory lock is acquired by default. For a shared lock, use 
+`shared = TRUE`. Set `file = <path>` to use a filepath hash for the name.
 
 ``` r
 tmp <- tempfile()
 mut <- interprocess::mutex(file = tmp)
 
 mut$name
-#> [1] "S6qYUQK2SwA"
+#> [1] "oThd9KRpHb0"
 
 with(mut, writeLines('Important Data', tmp))
 
@@ -108,13 +108,13 @@ sem$remove()
 ### Message Queues
 
 The constructor's `max_count` and `max_nchar` parameters determine how much 
-memory is allocated for the queue.
+memory is allocated for the message queue.
 
 ``` r
-mq <- interprocess::queue(max_count = 2, max_nchar = 5)
+mq <- interprocess::msg_queue(max_count = 2, max_nchar = 5)
 
 mq$name
-#> [1] "akRKb4iymMcAFV"
+#> [1] "Ae2udeRLWcb"
 
 mq$send('Hello')
 mq$send('Hi', priority = 1)

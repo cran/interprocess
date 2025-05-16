@@ -10,7 +10,11 @@
 #' time, for example to read a database file. While a shared lock is active, no 
 #' exclusive locks will be granted.
 #' 
+#' The operating system ensures that mutex locks are released when a process 
+#' exits.
 #' 
+#' 
+#' @family shared objects
 #' @rdname mutex
 #' 
 #' @param name    Unique ID. Alphanumeric, starting with a letter.
@@ -50,9 +54,9 @@
 #' * `$lock(shared = FALSE, timeout_ms = Inf)`
 #'   - Returns `TRUE` if the lock is acquired, or `FALSE` if the timeout is reached.
 #' * `$unlock(warn = TRUE)`
-#'   - Returns `TRUE` if successful, or `FALSE` (with optional warning) if the mutex wasn't locked.
+#'   - Returns `TRUE` if successful, or `FALSE` (with optional warning) if the mutex wasn't locked by this process.
 #' * `$remove()`
-#'   - Returns `TRUE` on success, or `FALSE` if the mutex wasn't found.\cr\cr
+#'   - Returns `TRUE` if the mutex was successfully deleted from the operating system, or `FALSE` on error.\cr\cr
 #' 
 #' `with()` returns `eval(expr)` if the lock was acquired, or `eval(alt_expr)` if the timeout is reached.
 #' 
@@ -114,11 +118,13 @@ mutex <- function (name = uid(), assert = NULL, cleanup = FALSE, file = NULL) {
   assert  <- validate_assert(assert, 'mutex')
   cleanup <- validate_bool(cleanup,  'mutex')
   
-  switch(
-    EXPR = assert,
-    'create' = rcpp_mutex_create_only(name),
-    'exists' = rcpp_mutex_open_only(name),
-    'NULL'   = rcpp_mutex_open_create(name) )
+  tryCatch(
+    error = function (e) open_error('mutex', name, assert, e),
+    expr  = switch(
+      EXPR = assert,
+      'create' = rcpp_mutex_create_only(name),
+      'exists' = rcpp_mutex_open_only(name),
+      'NULL'   = rcpp_mutex_open_create(name) ))
   
   if (isTRUE(cleanup))
     ENV$mutexes <- c(ENV$mutexes, name)

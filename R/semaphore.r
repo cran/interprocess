@@ -16,6 +16,7 @@
 #' mark.
 #' 
 #' 
+#' @family shared objects
 #' @rdname semaphore
 #' 
 #' @param name    Unique ID. Alphanumeric, starting with a letter.
@@ -57,7 +58,7 @@
 #' * `$wait(timeout_ms = Inf)`
 #'   - Returns `TRUE` if the decrement was successful, or `FALSE` if the timeout is reached.
 #' * `$remove()`
-#'   - Returns `TRUE` on success, or `FALSE` on error.\cr\cr
+#'   - Returns `TRUE` if the semaphore was successfully deleted from the operating system, or `FALSE` on error.\cr\cr
 #' 
 #' `with()` returns `eval(expr)` on success, or `eval(alt_expr)` if the timeout is reached.
 #' 
@@ -89,11 +90,14 @@ semaphore <- function (name = uid(), assert = NULL, value = 0, cleanup = FALSE, 
   assert  <- validate_assert(assert, 'semaphore')
   cleanup <- validate_bool(cleanup,  'semaphore')
   
-  switch(
-    EXPR = assert,
-    'create' = rcpp_sem_create_only(name, value),
-    'exists' = rcpp_sem_open_only(name),
-    'NULL'   = rcpp_sem_open_create(name, value) )
+  tryCatch(
+    error = function (e) open_error('semaphore', name, assert, e),
+    expr  = switch(
+      EXPR = assert,
+      'create' = rcpp_sem_create_only(name, value),
+      'exists' = rcpp_sem_open_only(name),
+      'NULL'   = rcpp_sem_open_create(name, value) ))
+  
   
   if (isTRUE(cleanup))
     ENV$semaphores <- c(ENV$semaphores, name)
